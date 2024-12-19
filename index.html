@@ -1,585 +1,907 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Rodigy - A Fantasy Math Adventure!</title>
+<title>Rodigy Mega Edition - Calder's Ultimate Math Adventure</title>
 <style>
-  body,html {
-    margin: 0; 
-    padding: 0; 
-    font-family: "Trebuchet MS", sans-serif;
-    background: #000;
-    overflow: hidden;
-  }
+/* 
+   ===================================================================
+   GLOBAL STYLES, KEYFRAMES, AND TRANSITIONS
+   ===================================================================
+*/
 
-  /* Keyframes for animations */
-  @keyframes floatCloud {
-    0% {transform: translateX(0);}
-    100% {transform: translateX(-2000px);}
-  }
+body,html {
+  margin:0; padding:0;
+  font-family:"Trebuchet MS", sans-serif;
+  background:#000;
+  overflow:hidden;
+}
 
-  @keyframes pulse {
-    0%, 100% { transform: scale(1);}
-    50% { transform: scale(1.05);}
-  }
+:root {
+  --main-bg: linear-gradient(#4f94d4, #88d5ff);
+  --accent-color:#00cc44;
+  --text-shadow:1px 1px 2px #ffffff;
+}
 
-  @keyframes shake {
-    0% {transform: translateX(0);}
-    20% {transform: translateX(-5px);}
-    40% {transform: translateX(5px);}
-    60% {transform: translateX(-5px);}
-    80% {transform: translateX(5px);}
-    100% {transform: translateX(0);}
-  }
+.hidden {
+  display:none;
+}
 
-  @keyframes flashMessage {
-    0% {opacity:0;}
-    50% {opacity:1;}
-    100% {opacity:0;}
-  }
+.screen {
+  position:absolute; top:0; left:0; right:0; bottom:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:#000;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.5s ease;
+}
 
-  @keyframes healthDrain {
-    0% {width: var(--start-width);}
-    100% {width: var(--end-width);}
-  }
+.screen.active {
+  opacity:1; pointer-events:auto;
+}
 
-  @keyframes fadeIn {
-    0% {opacity:0; transform: scale(0.9);}
-    100% {opacity:1; transform: scale(1);}
-  }
+@keyframes fadeIn {
+  0% {opacity:0;}100%{opacity:1;}
+}
+@keyframes fadeOut {
+  0% {opacity:1;}100%{opacity:0;}
+}
+@keyframes pulse {
+  0%,100% {transform:scale(1);}
+  50% {transform:scale(1.05);}
+}
+@keyframes parallax {
+  0% {background-position:0 0;}
+  100% {background-position:-8000px 0;}
+}
+@keyframes strike {
+  0% {opacity:0; transform: translateY(-50px) scaleY(0.5);}
+  50% {opacity:1; transform: translateY(0) scaleY(1);}
+  100% {opacity:0; transform: translateY(50px) scaleY(0.5);}
+}
+@keyframes floatItem {
+  0%,100% {transform:translateY(0);}
+  50% {transform:translateY(-10px);}
+}
 
-  @keyframes fadeOut {
-    0% {opacity:1;}
-    100% {opacity:0;transform: scale(0.9);}
-  }
+/* Fancy Buttons */
+.btn {
+  background: var(--accent-color);
+  color:#fff;
+  padding:15px 30px;
+  border:none;
+  border-radius:15px;
+  font-size:20px;
+  cursor:pointer;
+  box-shadow:0 0 10px #009933;
+  transition:transform 0.3s;
+  margin:10px;
+}
+.btn:hover {
+  transform:scale(1.05);
+}
 
-  @keyframes strike {
-    0% {opacity:0; transform: translateY(-50px) scaleY(0.5);}
-    50% {opacity:1; transform: translateY(0) scaleY(1);}
-    100% {opacity:0; transform: translateY(50px) scaleY(0.5);}
-  }
+/* Inputs */
+.input-field {
+  padding:10px;
+  font-size:18px;
+  border:2px solid #005500;
+  border-radius:10px;
+  margin:5px;
+}
+.select-field {
+  padding:10px;
+  font-size:18px;
+  border:2px solid #005500;
+  border-radius:10px;
+  margin:5px;
+  background:#ffffffcc;
+}
 
-  /* Intro Screen */
-  .intro-screen {
-    position:absolute;
-    top:0; left:0; right:0; bottom:0;
-    background: linear-gradient(#3a8fdd, #88eaff);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    color:#ffffff;
-    text-align:center;
-    z-index:1000;
-    animation: fadeIn 1s ease forwards;
-  }
-  .intro-title {
-    font-size: 60px;
-    font-weight:bold;
-    text-shadow:2px 2px 5px #003366;
-    margin-bottom:20px;
-  }
-  .play-btn {
-    padding: 15px 30px;
-    font-size:24px;
-    background:#00cc44;
-    border:none;
-    border-radius:10px;
-    color:#ffffff;
-    cursor:pointer;
-    box-shadow:0 0 10px #009922;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-  .play-btn:hover {
-    transform: translateY(-3px);
-    box-shadow:0 0 15px #00ff55;
-  }
+/* Common Title Style */
+.title {
+  font-size:48px;
+  color:#003366;
+  text-shadow:2px 2px 5px #ffffff;
+  margin-bottom:20px;
+  font-weight:bold;
+}
 
-  /* Game Container */
-  .game-container {
-    position:relative;
-    width:100vw;
-    height:100vh;
-    overflow:hidden;
-    display:none; /* Hidden until start */
-  }
+/* Common Subtitle Style */
+.subtitle {
+  font-size:24px;
+  color:#002244;
+  margin-bottom:30px;
+}
 
-  .header {
-    position:absolute;
-    top:0; left:0; right:0;
-    height:60px;
-    background: linear-gradient(to right, #55ccff, #88ddff, #bbffff);
-    box-shadow:0 3px 6px rgba(0,0,0,0.2);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 20px;
-    z-index:10;
-  }
+/*
+   ===================================================================
+   LOGIN / SETUP SCREEN
+   ===================================================================
+*/
 
-  .logo {
-    font-size:28px;
-    font-weight:bold;
-    color:#003366;
-    letter-spacing:2px;
-    text-shadow:1px 1px 2px #ffffff;
-  }
+.login-screen {
+  background: var(--main-bg);
+  animation:fadeIn 1s ease forwards;
+}
+.login-container {
+  background:#ffffffcc;
+  padding:20px;
+  border:2px solid #003366;
+  border-radius:20px;
+  box-shadow:0 0 20px #003366;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.login-fields {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:20px 0;
+}
+.login-label {
+  font-size:18px;
+  color:#003366;
+  margin:5px 0;
+}
+.character-preview {
+  margin:20px;
+  padding:20px;
+  background:#ffffffcc;
+  border:2px solid #005500;
+  border-radius:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.character-sprite {
+  width:120px; height:120px;
+  border-radius:50%;
+  background: radial-gradient(circle,#ffcc66,#ffaa00);
+  border:3px solid #aa6600;
+  display:flex; align-items:center; justify-content:center;
+  font-size:60px;
+  margin-bottom:10px;
+  animation:pulse 2s infinite;
+}
+.character-outfit {
+  font-size:16px;
+  color:#003300;
+}
 
-  .player-info {
-    font-size:18px;
-    color:#003366;
-    text-shadow:1px 1px 2px #ffffff;
-  }
+/*
+   ===================================================================
+   MAP SCREEN
+   ===================================================================
+*/
 
-  /* BACKGROUND SCENE - Layered */
-  .scene {
-    position:absolute;
-    top:60px; bottom:0; left:0; right:0;
-    overflow:hidden;
-    background: linear-gradient(#88eaff, #cceeff 30%, #ddffdd 60%, #aaffaa 100%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
+.map-screen {
+  background:#88eaff;
+  overflow:hidden;
+  flex-direction:column;
+  justify-content:flex-start;
+}
 
-  /* Layers: distant mountains, forest, grassland - use pseudo elements */
-  .scene::before, .scene::after {
-    content:"";
-    position:absolute;
-    width:300%;
-    height:300%;
-    top:50%; left:50%;
-    transform:translate(-50%, -50%);
-    pointer-events:none;
-    z-index:-2;
-  }
+.map-header {
+  width:100%; height:60px;
+  background: linear-gradient(to right, #55ccff,#88ddff,#bbffff);
+  box-shadow:0 3px 6px rgba(0,0,0,0.2);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+}
+.map-logo {
+  font-size:28px;
+  font-weight:bold;
+  color:#003366;
+  text-shadow:1px 1px 2px #ffffff;
+}
+.map-nav {
+  display:flex;
+  align-items:center;
+}
+.map-nav .btn {
+  margin:0 5px;
+}
 
-  .scene::before {
-    background:radial-gradient(circle at 50% 70%, #ffffff, #cceeff, #99ddff 30%, #66bbff 50%, #4488cc 80%);
-    opacity:0.5;
-  }
+.map-content {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
 
-  .scene::after {
-    background:radial-gradient(circle at 50% 50%, #bbffaa 0%, #66dd88 30%, #44aa66 60%, #226644 90%);
-    mix-blend-mode: multiply;
-    opacity:0.4;
-  }
+.map-title {
+  font-size:42px;
+  color:#003300;
+  text-shadow:1px 1px 2px #ffffff;
+  margin-bottom:30px;
+}
 
-  /* Add moving clouds */
-  .clouds {
-    position:absolute;
-    top:0; left:0; right:0; height:200px;
-    overflow:hidden;
-    z-index:-1;
-  }
+.map-region-select {
+  display:flex;
+  gap:50px;
+  flex-wrap:wrap;
+}
 
-  .clouds .cloud {
-    position:absolute;
-    top:50px;
-    width:300px; height:100px;
-    background:#ffffff;
-    border-radius:50%;
-    filter: blur(10px) brightness(110%);
-    animation: floatCloud 60s linear infinite;
-  }
-  /* multiple clouds */
-  .cloud:nth-child(1) {
-    left:100%; top:20px;
-  }
-  .cloud:nth-child(2) {
-    left:120%; top:80px; width:200px; height:60px;
-    animation-duration:50s;
-  }
-  .cloud:nth-child(3) {
-    left:130%; top:40px; width:250px; height:80px;
-    animation-duration:70s;
-  }
+.region {
+  width:200px; height:200px;
+  background: linear-gradient(#ffeeaa,#ffdd88);
+  border:5px solid #aa6600;
+  border-radius:50%;
+  box-shadow:0 0 20px #ffaa00;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  position:relative;
+  transition:transform 0.3s;
+}
+.region:hover {
+  transform:scale(1.1);
+}
+.region-emoji {font-size:60px;}
+.region-name {
+  font-size:20px; font-weight:bold;
+  color:#553300;
+}
+.region::before {
+  content:"";
+  position:absolute;
+  width:120%; height:120%;
+  border-radius:50%;
+  background:radial-gradient(#ffffff88,transparent);
+  top:-10%; left:-10%;
+  opacity:0.5; pointer-events:none;
+}
 
-  /* Battle Container */
+/*
+   ===================================================================
+   CHARACTER CUSTOMIZATION SCREEN
+   ===================================================================
+*/
+
+.customize-screen {
+  background: linear-gradient(#e0ffe0,#ccffcc);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+}
+.customize-title {
+  font-size:36px;
+  color:#003300; text-shadow:1px 1px 2px #ffffff;
+  margin-bottom:20px;
+}
+.customize-container {
+  background:#ffffffcc;
+  padding:20px;
+  border:2px solid #006600;
+  border-radius:20px;
+  box-shadow:0 0 20px #006600;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.customize-fields {
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px;
+  margin:20px;
+  justify-content:center;
+}
+.customize-field {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.customize-label {
+  font-size:18px; color:#003300;
+  margin-bottom:5px;
+}
+.customize-preview {
+  margin-top:20px;
+  display:flex; flex-direction:column; align-items:center;
+}
+
+/*
+   ===================================================================
+   BATTLE SCREEN
+   ===================================================================
+*/
+
+.battle-screen {
+  background: linear-gradient(#cceeff,#ddffee);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+}
+
+.battle-header {
+  position:absolute; top:0; left:0; right:0;
+  height:60px;
+  background: linear-gradient(to right,#55ccff,#88ddff,#bbffff);
+  box-shadow:0 3px 6px rgba(0,0,0,0.2);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px;
+  z-index:10;
+}
+.logo {
+  font-size:28px; font-weight:bold; color:#003366; letter-spacing:2px; text-shadow:1px 1px 2px #ffffff;
+}
+.player-info {
+  font-size:18px; color:#003366; text-shadow:1px 1px 2px #ffffff;
+}
+
+.battle-container {
+  width:90%; max-width:1000px; height:70%; max-height:600px;
+  background: linear-gradient(#ffffee,#ddffee);
+  border:5px solid #006633;
+  border-radius:20px;
+  box-shadow:0 0 15px #006600;
+  display:flex; align-items:center; justify-content:space-around;
+  position:relative; z-index:5;
+  animation:fadeIn 1s ease forwards;
+  margin-top:80px;
+}
+
+.hero,.enemy {
+  width:40%; height:80%;
+  background:#ffffffaa;
+  border:3px solid #005500;
+  border-radius:20px;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  padding-bottom:20px; position:relative;
+  box-shadow:inset 0 0 10px #005500; backdrop-filter:blur(5px);
+}
+.hero {
+  box-shadow:0 0 10px #00aa00, inset 0 0 10px #005500;
+}
+.enemy {
+  box-shadow:0 0 10px #aa0000, inset 0 0 10px #550000;
+}
+
+.hero .sprite, .enemy .sprite {
+  width:120px; height:120px; border-radius:50%;
+  border:3px solid #aa6600;
+  background: radial-gradient(circle,#ffcc66,#ffaa00);
+  display:flex; align-items:center; justify-content:center;
+  font-size:60px; margin-bottom:20px;
+  animation:pulse 2s infinite;
+}
+
+.hero .sprite {
+  background:radial-gradient(circle at 50% 30%, #ffffaa,#ffcc66);
+  border-color:#cc8800;
+  text-shadow:2px 2px 5px #ffffaa;
+}
+.enemy .sprite {
+  background:radial-gradient(circle at 50% 30%,#ff9999,#ff5555);
+  border-color:#aa0000;
+  text-shadow:2px 2px 5px #ff9999;
+}
+
+.name {
+  font-size:22px; font-weight:bold; color:#003300; margin-bottom:10px; text-shadow:1px 1px 2px #ffffff;
+}
+.enemy .name {color:#660000;}
+
+.health-bar {
+  width:80%; height:20px; background:#eeeeee;
+  border:2px solid #333333; border-radius:10px;
+  position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  overflow:hidden;
+}
+.health-bar-inner {
+  height:100%; background:linear-gradient(to right,#00dd00,#00aa00);
+  transition:width 0.5s ease;
+}
+.enemy .health-bar-inner {
+  background:linear-gradient(to right,#dd0000,#aa0000);
+}
+
+/* Math Box */
+.math-box {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  background:#ffffffcc; border:2px solid #005500; border-radius:10px;
+  padding:10px; text-align:center; box-shadow:0 0 10px #005500;
+  width:300px;
+}
+.math-box p {margin:5px 0; font-size:18px; color:#003300;}
+.math-box .answer-input {
+  width:80px; padding:5px; border:2px solid #005500; border-radius:5px; font-size:16px; text-align:center; margin:5px;
+}
+.math-box .attack-btn {
+  padding:8px 12px; background:#00cc44; border:none; border-radius:5px;
+  color:#ffffff; font-size:16px; cursor:pointer; font-weight:bold;
+}
+.math-box .attack-btn:hover {background:#009933;}
+
+/* Message Box */
+.message-box {
+  position:absolute; top:20px; width:80%; left:50%; transform:translateX(-50%);
+  background:#ffffffdd; border:2px solid #006600; border-radius:10px;
+  padding:10px; text-align:center; font-size:18px; color:#003300; display:none; z-index:10;
+}
+.victory {font-size:32px; color:#009900; font-weight:bold; text-shadow:1px 1px 2px #ffffff;}
+.defeat {font-size:32px; color:#990000; font-weight:bold; text-shadow:1px 1px 2px #ffffff;}
+.restart-btn {
+  margin-top:10px; padding:10px 20px; background:#3333aa; color:#ffffff; font-size:20px; border:none; border-radius:10px; cursor:pointer; box-shadow:0 0 10px #0000aa;
+}
+.restart-btn:hover {background:#000099;}
+
+.attack-effect {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:50px; height:150px; background:linear-gradient(#ffff88,#ffaa00);
+  border:2px solid #aa6600; border-radius:10px;
+  box-shadow:0 0 20px #ffee00,0 0 5px #ffcc00 inset;
+  animation:strike 1s ease forwards; display:none; z-index:20;
+}
+
+/* Responsive Adjustments */
+@media(max-width:600px) {
+  .map-region-select {flex-direction:column;}
   .battle-container {
-    width:90%;
-    max-width:1000px;
-    height:70%;
-    max-height:600px;
-    background: linear-gradient(#ffffee, #ddffee);
-    border:5px solid #006633;
-    border-radius:20px;
-    box-shadow:0 0 15px #006600;
-    display:flex;
-    align-items:center;
-    justify-content:space-around;
-    position:relative;
-    z-index:5;
-    animation: fadeIn 1s ease forwards;
+    flex-direction:column; height:80%;
   }
+  .hero,.enemy {width:80%; height:40%;}
+}
 
-  .hero, .enemy {
-    width:40%;
-    height:80%;
-    background: #ffffffaa;
-    border:3px solid #005500;
-    border-radius:20px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-end;
-    padding-bottom:20px;
-    position:relative;
-    box-shadow:inset 0 0 10px #005500;
-    backdrop-filter:blur(5px);
-  }
-
-  .hero {
-    box-shadow:0 0 10px #00aa00, inset 0 0 10px #005500;
-  }
-
-  .enemy {
-    box-shadow:0 0 10px #aa0000, inset 0 0 10px #550000;
-  }
-
-  .hero .sprite, .enemy .sprite {
-    width:120px; height:120px;
-    background: radial-gradient(circle, #ffcc66, #ffaa00);
-    border:3px solid #aa6600;
-    border-radius:50%;
-    margin-bottom:20px;
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:60px;
-    animation: pulse 2s infinite;
-  }
-
-  .hero .sprite {
-    background: radial-gradient(circle at 50% 30%, #ffffaa, #ffcc66);
-    border-color:#cc8800;
-    text-shadow:2px 2px 5px #ffffaa;
-  }
-
-  .enemy .sprite {
-    background: radial-gradient(circle at 50% 30%, #ff9999, #ff5555);
-    border-color:#aa0000;
-    text-shadow:2px 2px 5px #ff9999;
-  }
-
-  .hero .sprite::before {
-    content:"🤠";
-  }
-
-  .enemy .sprite::before {
-    content:"👹";
-  }
-
-  .name {
-    font-size:22px;
-    font-weight:bold;
-    color:#003300;
-    margin-bottom:10px;
-    text-shadow:1px 1px 2px #ffffff;
-  }
-
-  .enemy .name {
-    color:#660000;
-  }
-
-  .health-bar {
-    width:80%;
-    height:20px;
-    background:#eeeeee;
-    border:2px solid #333333;
-    border-radius:10px;
-    position:absolute;
-    top:10px; left:50%;
-    transform:translateX(-50%);
-    overflow:hidden;
-  }
-
-  .health-bar-inner {
-    height:100%;
-    background: linear-gradient(to right, #00dd00, #00aa00);
-    transition:width 0.5s ease;
-  }
-
-  .enemy .health-bar-inner {
-    background: linear-gradient(to right, #dd0000, #aa0000);
-  }
-
-  /* Math Box */
-  .math-box {
-    position:absolute;
-    bottom:10px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#ffffffcc;
-    border:2px solid #005500;
-    border-radius:10px;
-    padding:10px;
-    text-align:center;
-    box-shadow:0 0 10px #005500;
-    width:300px;
-  }
-
-  .math-box p {
-    margin:5px 0;
-    font-size:18px;
-    color:#003300;
-  }
-
-  .math-box .answer-input {
-    width:80px;
-    padding:5px;
-    border:2px solid #005500;
-    border-radius:5px;
-    font-size:16px;
-    text-align:center;
-    margin:5px;
-  }
-
-  .math-box .attack-btn {
-    padding:8px 12px;
-    background:#00cc44;
-    border:none;
-    border-radius:5px;
-    color:#ffffff;
-    font-size:16px;
-    cursor:pointer;
-    font-weight:bold;
-  }
-  .math-box .attack-btn:hover {
-    background:#009933;
-  }
-
-  /* Message Box */
-  .message-box {
-    position:absolute;
-    top:20px;
-    width:80%;
-    left:50%;
-    transform:translateX(-50%);
-    background:#ffffffdd;
-    border:2px solid #006600;
-    border-radius:10px;
-    padding:10px;
-    text-align:center;
-    font-size:18px;
-    color:#003300;
-    display:none;
-    z-index:10;
-  }
-
-  .victory {
-    font-size:32px;
-    color:#009900;
-    font-weight:bold;
-    text-shadow:1px 1px 2px #ffffff;
-  }
-
-  .defeat {
-    font-size:32px;
-    color:#990000;
-    font-weight:bold;
-    text-shadow:1px 1px 2px #ffffff;
-  }
-
-  .restart-btn {
-    margin-top:10px;
-    padding:10px 20px;
-    background:#3333aa;
-    color:#ffffff;
-    font-size:20px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    box-shadow:0 0 10px #0000aa;
-  }
-  .restart-btn:hover {
-    background:#000099;
-  }
-
-  /* Attack effect */
-  .attack-effect {
-    position:absolute;
-    left:50%; top:50%;
-    transform:translate(-50%,-50%);
-    width:50px; height:150px;
-    background: linear-gradient(#ffff88, #ffaa00);
-    border:2px solid #aa6600;
-    border-radius:10px;
-    box-shadow:0 0 20px #ffee00, 0 0 5px #ffcc00 inset;
-    animation: strike 1s ease forwards;
-    display:none;
-  }
-
-  /* Responsive adjustments */
-  @media(max-width:600px) {
-    .battle-container {
-      flex-direction:column;
-      height:80%;
-    }
-    .hero, .enemy {
-      width:80%;
-      height:40%;
-    }
-  }
+/* Extra Aesthetic Elements */
 </style>
 </head>
 <body>
-<div class="intro-screen">
-  <div class="intro-title">Rodigy 😂🔥</div>
-  <p style="font-size:20px;">A Magical Math Adventure Awaits, Calder! 😂</p>
-  <button class="play-btn">Play Now!</button>
+
+<!-- 
+   ==========================================================================
+   LOGIN/SETUP SCREEN
+   ==========================================================================
+-->
+<div class="screen login-screen active" data-screen="login">
+  <div class="login-container">
+    <div class="title">Rodigy Mega Edition 😂🔥</div>
+    <div class="subtitle">Enter your name, choose your grade level, difficulty, and customize your character!</div>
+    <div class="login-fields">
+      <div class="login-label">Your Name:</div>
+      <input type="text" class="input-field player-name-input" placeholder="Enter Name"/>
+      <div class="login-label">Select Grade:</div>
+      <select class="select-field player-grade-select">
+        <option value="1">Grade 1</option>
+        <option value="2">Grade 2</option>
+        <option value="3">Grade 3</option>
+        <option value="4">Grade 4</option>
+        <option value="5">Grade 5</option>
+        <option value="6">Grade 6</option>
+      </select>
+      <div class="login-label">Difficulty:</div>
+      <select class="select-field player-difficulty-select">
+        <option value="standard">Standard</option>
+        <option value="advanced">Advanced</option>
+      </select>
+      <div class="login-label">Choose Face:</div>
+      <select class="select-field player-face-select">
+        <option value="🤠">🤠</option>
+        <option value="😎">😎</option>
+        <option value="😁">😁</option>
+        <option value="😈">😈</option>
+        <option value="👧">👧</option>
+        <option value="👦">👦</option>
+      </select>
+      <div class="login-label">Choose Outfit Color:</div>
+      <select class="select-field player-color-select">
+        <option value="#ffaa00">Golden</option>
+        <option value="#00aaff">Blue</option>
+        <option value="#dd44dd">Purple</option>
+        <option value="#00dd00">Green</option>
+      </select>
+    </div>
+    <div class="character-preview">
+      <div class="character-sprite preview-sprite"></div>
+      <div class="character-outfit preview-outfit"></div>
+    </div>
+    <button class="btn start-btn">Start Adventure!</button>
+  </div>
 </div>
 
-<div class="game-container">
-  <div class="header">
-    <div class="logo">Rodigy</div>
-    <div class="player-info">Player: Calder! 😂 Level: 1 ⚔️</div>
+<!-- 
+   ==========================================================================
+   WORLD MAP SCREEN
+   ==========================================================================
+-->
+<div class="screen map-screen" data-screen="map">
+  <div class="map-header">
+    <div class="map-logo">Rodigy</div>
+    <div class="map-nav">
+      <button class="btn open-customize-btn">Customize Character</button>
+      <button class="btn logout-btn">Logout</button>
+    </div>
   </div>
-  <div class="scene">
-    <div class="clouds">
-      <div class="cloud"></div>
-      <div class="cloud"></div>
-      <div class="cloud"></div>
+  <div class="map-content">
+    <div class="map-title">Choose a Region, <span class="map-player-name"></span>! 😂</div>
+    <div class="map-region-select">
+      <div class="region" data-region="forest"><div class="region-emoji">🌳</div><div class="region-name">Enchanted Forest</div></div>
+      <div class="region" data-region="mountain"><div class="region-emoji">⛰️</div><div class="region-name">Misty Mountain</div></div>
+      <div class="region" data-region="desert"><div class="region-emoji">🏜️</div><div class="region-name">Desert Sands</div></div>
+      <div class="region" data-region="ocean"><div class="region-emoji">🌊</div><div class="region-name">Ocean Depths</div></div>
+      <div class="region" data-region="sky"><div class="region-emoji">☁️</div><div class="region-name">Sky Kingdom</div></div>
     </div>
-    <div class="battle-container">
-      <div class="hero">
-        <div class="name">Calder The Brave 😂</div>
-        <div class="sprite"></div>
-        <div class="health-bar hero-health-bar">
-          <div class="health-bar-inner hero-health" style="width:100%;"></div>
-        </div>
+  </div>
+</div>
+
+<!-- 
+   ==========================================================================
+   CHARACTER CUSTOMIZATION SCREEN
+   ==========================================================================
+-->
+<div class="screen customize-screen" data-screen="customize">
+  <div class="customize-title">Customize Your Character, <span class="customize-player-name"></span>!</div>
+  <div class="customize-container">
+    <div class="customize-fields">
+      <div class="customize-field">
+        <div class="customize-label">New Name:</div>
+        <input type="text" class="input-field customize-name-input"/>
       </div>
-      <div class="enemy">
-        <div class="name">Goblin Grump 😂</div>
-        <div class="sprite"></div>
-        <div class="health-bar enemy-health-bar">
-          <div class="health-bar-inner enemy-health" style="width:100%;"></div>
-        </div>
+      <div class="customize-field">
+        <div class="customize-label">Face:</div>
+        <select class="select-field customize-face-select">
+          <option value="🤠">🤠</option>
+          <option value="😎">😎</option>
+          <option value="😁">😁</option>
+          <option value="😈">😈</option>
+          <option value="👧">👧</option>
+          <option value="👦">👦</option>
+        </select>
       </div>
-      <div class="math-box">
-        <p>Answer this to attack! 😂</p>
-        <p class="question"></p>
-        <input type="number" class="answer-input" placeholder="Your answer"/>
-        <button class="attack-btn">Attack!</button>
+      <div class="customize-field">
+        <div class="customize-label">Outfit Color:</div>
+        <select class="select-field customize-color-select">
+          <option value="#ffaa00">Golden</option>
+          <option value="#00aaff">Blue</option>
+          <option value="#dd44dd">Purple</option>
+          <option value="#00dd00">Green</option>
+        </select>
       </div>
-      <div class="message-box"></div>
-      <div class="attack-effect"></div>
+      <div class="customize-field">
+        <div class="customize-label">Grade:</div>
+        <select class="select-field customize-grade-select">
+          <option value="1">Grade 1</option>
+          <option value="2">Grade 2</option>
+          <option value="3">Grade 3</option>
+          <option value="4">Grade 4</option>
+          <option value="5">Grade 5</option>
+          <option value="6">Grade 6</option>
+        </select>
+      </div>
+      <div class="customize-field">
+        <div class="customize-label">Difficulty:</div>
+        <select class="select-field customize-difficulty-select">
+          <option value="standard">Standard</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </div>
     </div>
+    <div class="customize-preview">
+      <div class="character-sprite customize-preview-sprite"></div>
+      <div class="character-outfit customize-preview-outfit"></div>
+      <button class="btn save-customization-btn">Save & Return</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 
+   ==========================================================================
+   BATTLE SCREEN
+   ==========================================================================
+-->
+<div class="screen battle-screen" data-screen="battle">
+  <div class="battle-header">
+    <div class="logo">Rodigy</div>
+    <div class="player-info">Player: <span class="battle-player-name"></span> 😂 Grade: <span class="battle-player-grade"></span> (<span class="battle-player-difficulty"></span>) ⚔️</div>
+  </div>
+  <div class="battle-container">
+    <div class="hero">
+      <div class="name hero-name"></div>
+      <div class="sprite hero-sprite"></div>
+      <div class="health-bar hero-health-bar"><div class="health-bar-inner hero-health" style="width:100%;"></div></div>
+    </div>
+    <div class="enemy">
+      <div class="name enemy-name"></div>
+      <div class="sprite enemy-sprite"></div>
+      <div class="health-bar enemy-health-bar"><div class="health-bar-inner enemy-health" style="width:100%;"></div></div>
+    </div>
+    <div class="math-box">
+      <p>Answer this to attack! 😂</p>
+      <p class="question"></p>
+      <input type="number" class="answer-input" placeholder="Your answer"/>
+      <button class="attack-btn">Attack!</button>
+    </div>
+    <div class="message-box"></div>
+    <div class="attack-effect"></div>
   </div>
 </div>
 
 <script>
-  (function(){
-    const introScreen = document.querySelector('.intro-screen');
-    const playBtn = document.querySelector('.play-btn');
-    const gameContainer = document.querySelector('.game-container');
+(function(){
+// ===========================================================================
+// GLOBAL STATE & UTILS
+// ===========================================================================
+let player = {
+  name:"",
+  grade:"1",
+  difficulty:"standard",
+  face:"🤠",
+  color:"#ffaa00"
+};
+let heroHealth=100;
+let enemyHealth=100;
+let gameActive=true;
+let currentQuestion=null;
+let currentEnemy="Goblin Grump 😂";
+let currentRegion="forest";
 
-    const questionEl = document.querySelector('.question');
-    const answerInput = document.querySelector('.answer-input');
-    const attackBtn = document.querySelector('.attack-btn');
-    const messageBox = document.querySelector('.message-box');
+// Try load from localStorage
+if(localStorage.getItem('playerData')) {
+  player = JSON.parse(localStorage.getItem('playerData'));
+}
 
-    const heroHealthBar = document.querySelector('.hero-health');
-    const enemyHealthBar = document.querySelector('.enemy-health');
+// DOM Elements
+const screens = document.querySelectorAll('.screen');
+function showScreen(name){
+  screens.forEach(s=> {
+    if(s.dataset.screen===name) s.classList.add('active'); 
+    else s.classList.remove('active');
+  });
+}
 
-    const attackEffect = document.querySelector('.attack-effect');
+// LOGIN SCREEN
+const startBtn = document.querySelector('.start-btn');
+const playerNameInput = document.querySelector('.player-name-input');
+const playerGradeSelect = document.querySelector('.player-grade-select');
+const playerDifficultySelect = document.querySelector('.player-difficulty-select');
+const playerFaceSelect = document.querySelector('.player-face-select');
+const playerColorSelect = document.querySelector('.player-color-select');
+const previewSprite = document.querySelector('.preview-sprite');
+const previewOutfit = document.querySelector('.preview-outfit');
 
-    let heroHealth = 100;
-    let enemyHealth = 100;
-    let currentQuestion = generateQuestion();
-    let gameActive = true;
+function updateCharacterPreview(){
+  previewSprite.textContent = playerFaceSelect.value;
+  previewSprite.style.borderColor="#aa6600";
+  previewSprite.style.background=`radial-gradient(circle,${playerColorSelect.value},#ffaa00)`;
+  previewOutfit.textContent = `Outfit: ${playerColorSelect.options[playerColorSelect.selectedIndex].text}`;
+}
 
-    playBtn.addEventListener('click', () => {
-      introScreen.style.display='none';
-      gameContainer.style.display='block';
-    });
+// Listen for changes
+[playerFaceSelect,playerColorSelect].forEach(el=>el.addEventListener('change',updateCharacterPreview));
 
-    function generateQuestion() {
-      const num1 = Math.floor(Math.random()*10)+1;
-      const num2 = Math.floor(Math.random()*10)+1;
-      const op = Math.random()>0.5?'+':'-';
-      questionEl.textContent = `${num1} ${op} ${num2} = ?`;
-      return {num1, num2, op};
-    }
+// Start Adventure
+startBtn.addEventListener('click',()=>{
+  player.name = playerNameInput.value || "Adventurer";
+  player.grade = playerGradeSelect.value;
+  player.difficulty = playerDifficultySelect.value;
+  player.face = playerFaceSelect.value;
+  player.color = playerColorSelect.value;
+  savePlayerData();
+  showScreen('map');
+  updateMapScreen();
+});
 
-    function checkAnswer() {
-      const val = parseInt(answerInput.value,10);
-      if(isNaN(val)) return false;
-      const correct = currentQuestion.op==='+' ? (currentQuestion.num1+currentQuestion.num2) : (currentQuestion.num1 - currentQuestion.num2);
-      return val===correct;
-    }
+// MAP SCREEN
+const mapPlayerNameEl = document.querySelector('.map-player-name');
+const regions = document.querySelectorAll('.region');
+const openCustomizeBtn = document.querySelector('.open-customize-btn');
+const logoutBtn = document.querySelector('.logout-btn');
 
-    function updateHealthBars() {
-      heroHealthBar.style.width = heroHealth+'%';
-      enemyHealthBar.style.width = enemyHealth+'%';
-    }
+function updateMapScreen(){
+  mapPlayerNameEl.textContent=player.name;
+}
 
-    function heroAttack() {
-      // hero attacks enemy
-      enemyHealth -= Math.floor(Math.random()*20)+10; // 10-29 damage
-      if(enemyHealth<0) enemyHealth=0;
-      animateAttackEffect('enemy');
-      setTimeout(updateHealthBars, 500);
-      setTimeout(checkEndGame, 800);
-    }
+regions.forEach(r=>{
+  r.addEventListener('click',()=>{
+    currentRegion=r.dataset.region;
+    startBattle();
+  });
+});
 
-    function enemyAttack() {
-      // enemy attacks hero
-      heroHealth -= Math.floor(Math.random()*15)+5; // 5-19 damage
-      if(heroHealth<0) heroHealth=0;
-      animateAttackEffect('hero');
-      setTimeout(updateHealthBars,500);
-      setTimeout(checkEndGame,800);
-    }
+openCustomizeBtn.addEventListener('click',()=>{
+  showScreen('customize');
+  updateCustomizeScreen();
+});
 
-    function animateAttackEffect(target) {
-      attackEffect.style.display='block';
-      let startLeft = target==='enemy'? '30%' : '70%';
-      attackEffect.style.left = startLeft;
-      attackEffect.style.top = '50%';
-      attackEffect.style.animation='strike 1s ease forwards';
-      attackEffect.addEventListener('animationend', ()=>{
-        attackEffect.style.display='none';
-      }, {once:true});
-    }
+logoutBtn.addEventListener('click',()=>{
+  localStorage.removeItem('playerData');
+  location.reload();
+});
 
-    function checkEndGame() {
-      if(enemyHealth<=0) {
-        showMessage("You defeated the Goblin Grump! 😂", "victory");
-        gameActive=false;
-      } else if(heroHealth<=0) {
-        showMessage("You were defeated by the Goblin Grump... 😢", "defeat");
-        gameActive=false;
-      } else {
-        // continue battle
-      }
-    }
+// CUSTOMIZE SCREEN
+const customizePlayerNameEl = document.querySelector('.customize-player-name');
+const customizeNameInput = document.querySelector('.customize-name-input');
+const customizeFaceSelect = document.querySelector('.customize-face-select');
+const customizeColorSelect = document.querySelector('.customize-color-select');
+const customizeGradeSelect = document.querySelector('.customize-grade-select');
+const customizeDifficultySelect = document.querySelector('.customize-difficulty-select');
+const customizePreviewSprite = document.querySelector('.customize-preview-sprite');
+const customizePreviewOutfit = document.querySelector('.customize-preview-outfit');
+const saveCustomizationBtn = document.querySelector('.save-customization-btn');
 
-    function showMessage(msg, type) {
-      messageBox.style.display='block';
-      messageBox.innerHTML = `<div class="${type}">${msg}</div><button class="restart-btn">Play Again</button>`;
-      const restartBtn = messageBox.querySelector('.restart-btn');
-      restartBtn.addEventListener('click', ()=>{
-        location.reload();
-      });
-    }
+function updateCustomizeScreen(){
+  customizePlayerNameEl.textContent=player.name;
+  customizeNameInput.value=player.name;
+  customizeFaceSelect.value=player.face;
+  customizeColorSelect.value=player.color;
+  customizeGradeSelect.value=player.grade;
+  customizeDifficultySelect.value=player.difficulty;
+  updateCustomizePreview();
+}
 
-    attackBtn.addEventListener('click', ()=>{
-      if(!gameActive) return;
-      if(checkAnswer()){
-        // Correct: hero attacks enemy
-        heroAttack();
-      } else {
-        // Incorrect: enemy attacks hero
-        enemyAttack();
-      }
-      answerInput.value='';
-      currentQuestion=generateQuestion();
-    });
+function updateCustomizePreview(){
+  customizePreviewSprite.textContent=customizeFaceSelect.value;
+  customizePreviewSprite.style.background=`radial-gradient(circle,${customizeColorSelect.value},#ffaa00)`;
+  customizePreviewOutfit.textContent=`Outfit: ${customizeColorSelect.options[customizeColorSelect.selectedIndex].text}`;
+}
 
-  })();
+[customizeFaceSelect,customizeColorSelect,customizeNameInput,customizeGradeSelect,customizeDifficultySelect].forEach(el=>{
+  el.addEventListener('change',updateCustomizePreview);
+  el.addEventListener('input',updateCustomizePreview);
+});
+
+saveCustomizationBtn.addEventListener('click',()=>{
+  player.name=customizeNameInput.value||player.name;
+  player.face=customizeFaceSelect.value;
+  player.color=customizeColorSelect.value;
+  player.grade=customizeGradeSelect.value;
+  player.difficulty=customizeDifficultySelect.value;
+  savePlayerData();
+  showScreen('map');
+  updateMapScreen();
+});
+
+// BATTLE SCREEN
+const battlePlayerNameEl=document.querySelector('.battle-player-name');
+const battlePlayerGradeEl=document.querySelector('.battle-player-grade');
+const battlePlayerDifficultyEl=document.querySelector('.battle-player-difficulty');
+const heroNameEl=document.querySelector('.hero-name');
+const heroSpriteEl=document.querySelector('.hero-sprite');
+const enemyNameEl=document.querySelector('.enemy-name');
+const enemySpriteEl=document.querySelector('.enemy-sprite');
+const heroHealthBar = document.querySelector('.hero-health');
+const enemyHealthBar = document.querySelector('.enemy-health');
+const questionEl = document.querySelector('.question');
+const answerInput = document.querySelector('.answer-input');
+const attackBtn = document.querySelector('.attack-btn');
+const messageBox = document.querySelector('.message-box');
+const attackEffect = document.querySelector('.attack-effect');
+
+function startBattle(){
+  heroHealth=100; enemyHealth=100; gameActive=true;
+  heroNameEl.textContent=player.name+" The Brave 😂";
+  heroSpriteEl.textContent=player.face;
+  heroSpriteEl.style.background=`radial-gradient(circle,${player.color},#ffaa00)`;
+
+  // Enemy based on region
+  if(currentRegion==="forest") {currentEnemy="Goblin Grump 😂"; enemySpriteEl.textContent="👹";}
+  else if(currentRegion==="mountain") {currentEnemy="Rock Troll 😂"; enemySpriteEl.textContent="🗿";}
+  else if(currentRegion==="desert") {currentEnemy="Cactus Crawler 😂"; enemySpriteEl.textContent="🌵";}
+  else if(currentRegion==="ocean") {currentEnemy="Pirate Crab 😂"; enemySpriteEl.textContent="🦀";}
+  else if(currentRegion==="sky") {currentEnemy="Cloud Harpy 😂"; enemySpriteEl.textContent="🦅";}
+
+  enemyNameEl.textContent=currentEnemy;
+
+  battlePlayerNameEl.textContent=player.name;
+  battlePlayerGradeEl.textContent=player.grade;
+  battlePlayerDifficultyEl.textContent=player.difficulty;
+
+  updateHealthBars();
+  currentQuestion=generateQuestion();
+  answerInput.value='';
+  showScreen('battle');
+}
+
+function updateHealthBars(){
+  heroHealthBar.style.width=heroHealth+'%';
+  enemyHealthBar.style.width=enemyHealth+'%';
+}
+
+function generateQuestion(){
+  let opArr = ['+','-'];
+  if(parseInt(player.grade)>=3) opArr.push('*');
+  if(player.difficulty==='advanced') opArr.push('/');
+
+  let op = opArr[Math.floor(Math.random()*opArr.length)];
+  let maxNum = parseInt(player.grade)*10;
+  if(player.difficulty==='advanced') maxNum*=2;
+  let num1=Math.floor(Math.random()*maxNum)+1;
+  let num2=Math.floor(Math.random()*maxNum)+1;
+
+  // Avoid division by zero
+  if(op==='/' && num2===0) num2=1;
+
+  questionEl.textContent = `${num1} ${op} ${num2} = ?`;
+  return {num1,num2,op};
+}
+
+attackBtn.addEventListener('click',()=>{
+  if(!gameActive) return;
+  if(checkAnswer()) heroAttack(); 
+  else enemyAttack();
+  answerInput.value='';
+  currentQuestion=generateQuestion();
+});
+
+function checkAnswer(){
+  const val=parseFloat(answerInput.value);
+  if(isNaN(val)) return false;
+  let correct;
+  switch(currentQuestion.op){
+    case '+': correct=currentQuestion.num1+currentQuestion.num2; break;
+    case '-': correct=currentQuestion.num1-currentQuestion.num2; break;
+    case '*': correct=currentQuestion.num1*currentQuestion.num2; break;
+    case '/': correct=currentQuestion.num1/currentQuestion.num2; correct=parseFloat(correct.toFixed(2)); break;
+  }
+  return val===correct;
+}
+
+function heroAttack(){
+  enemyHealth -= Math.floor(Math.random()*20)+10;
+  if(enemyHealth<0) enemyHealth=0;
+  animateAttackEffect('enemy');
+  setTimeout(updateHealthBars,500);
+  setTimeout(checkEndGame,800);
+}
+
+function enemyAttack(){
+  heroHealth -= Math.floor(Math.random()*15)+5;
+  if(heroHealth<0) heroHealth=0;
+  animateAttackEffect('hero');
+  setTimeout(updateHealthBars,500);
+  setTimeout(checkEndGame,800);
+}
+
+function animateAttackEffect(target){
+  attackEffect.style.display='block';
+  let startLeft=(target==='enemy'?'70%':'30%');
+  attackEffect.style.left=startLeft;
+  attackEffect.style.animation='strike 1s ease forwards';
+  attackEffect.addEventListener('animationend',()=>{
+    attackEffect.style.display='none';
+  },{once:true});
+}
+
+function checkEndGame(){
+  if(enemyHealth<=0){
+    showMessage("You defeated the "+currentEnemy+"! 😂","victory");
+    gameActive=false;
+  } else if(heroHealth<=0){
+    showMessage("You were defeated by the "+currentEnemy+"... 😢","defeat");
+    gameActive=false;
+  }
+}
+
+function showMessage(msg,type){
+  messageBox.style.display='block';
+  messageBox.innerHTML=`<div class="${type}">${msg}</div><button class="restart-btn">Return to Map</button>`;
+  const restartBtn=messageBox.querySelector('.restart-btn');
+  restartBtn.addEventListener('click',()=>{
+    messageBox.style.display='none';
+    showScreen('map');
+  });
+}
+
+// Save player data
+function savePlayerData(){
+  localStorage.setItem('playerData',JSON.stringify(player));
+}
+
+// Init
+updateCharacterPreview();
+
+})();
 </script>
 </body>
 </html>
